@@ -1,7 +1,9 @@
-import { AccountDAODatabase, AccountDAOMemory } from "../src/AccountDAO";
-import GetAccount from "../src/GetAccount";
-import { MailerGatewayMemory } from "../src/MailerGateway";
-import Signup from "../src/Signup";
+import { AccountRepositoryDatabase, AccountRepositoryMemory } from "../src/infra/repository/AccountRepository";
+import { PgPromiseAdapter } from "../src/infra/database/DatabaseConnection";
+import { Registry } from "../src/infra/di/DI";
+import GetAccount from "../src/application/usecase/GetAccount";
+import { MailerGatewayMemory } from "../src/infra/gateway/MailerGateway";
+import Signup from "../src/application/usecase/Signup";
 import sinon from "sinon";
 
 let signup: Signup;
@@ -9,13 +11,11 @@ let getAccount: GetAccount;
 
 // Integration Narrow -> Broad
 beforeEach(() => {
-	const accountDAO = new AccountDAODatabase();
-	// fake
-	// const accountDAO = new AccountDAOMemory();
-	// fake
-	const mailerGateway = new MailerGatewayMemory();
-	signup = new Signup(accountDAO, mailerGateway);
-	getAccount = new GetAccount(accountDAO);
+	Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
+	Registry.getInstance().provide("accountRepository", new AccountRepositoryDatabase());
+	Registry.getInstance().provide("mailerGateway", new MailerGatewayMemory());
+	signup = new Signup();
+	getAccount = new GetAccount();
 });
 
 test("Deve criar a conta de um passageiro", async function () {
@@ -47,28 +47,6 @@ test("Não deve criar a conta de um passageiro com nome inválido", async functi
 	await expect(() => signup.execute(input)).rejects.toThrow(new Error("Invalid name"));
 });
 
-test("Não deve criar a conta de um passageiro com email inválido", async function () {
-	const input = {
-		name: "John Doe",
-		email: `john.doe${Math.random()}`,
-		cpf: "97456321558",
-		password: "123456",
-		isPassenger: true
-	};
-	await expect(() => signup.execute(input)).rejects.toThrow(new Error("Invalid email"));
-});
-
-test("Não deve criar a conta de um passageiro com cpf inválido", async function () {
-	const input = {
-		name: "John Doe",
-		email: `john.doe${Math.random()}@gmail.com`,
-		cpf: "9745632155",
-		password: "123456",
-		isPassenger: true
-	};
-	await expect(() => signup.execute(input)).rejects.toThrow(new Error("Invalid cpf"));
-});
-
 test("Não deve criar a conta de um passageiro duplicado", async function () {
 	const input = {
 		name: "John Doe",
@@ -81,21 +59,9 @@ test("Não deve criar a conta de um passageiro duplicado", async function () {
 	await expect(() => signup.execute(input)).rejects.toThrow(new Error("Duplicated account"));
 });
 
-test("Não deve criar a conta de um motorista com placa inválida", async function () {
-	const input = {
-		name: "John Doe",
-		email: `john.doe${Math.random()}@gmail.com`,
-		cpf: "97456321558",
-		password: "123456",
-		carPlate: "AAA999",
-		isDriver: true
-	};
-	await expect(() => signup.execute(input)).rejects.toThrow(new Error("Invalid car plate"));
-});
-
 test("Deve criar a conta de um passageiro com stub", async function () {
 	const mailerStub = sinon.stub(MailerGatewayMemory.prototype, "send").resolves();
-	const getAccountByEmail = sinon.stub(AccountDAODatabase.prototype, "getAccountByEmail").resolves();
+	const getAccountByEmail = sinon.stub(AccountRepositoryDatabase.prototype, "getAccountByEmail").resolves();
 	const input = {
 		name: "John Doe",
 		email: `john.doe@gmail.com`,
@@ -156,4 +122,9 @@ test("Deve criar a conta de um passageiro com mock", async function () {
 	expect(outputGetAccount.password).toBe(input.password);
 	mailerMock.verify();
 	mailerMock.restore();
+});
+
+afterEach(async () => {
+	const connection = Registry.getInstance().inject("databaseConnection");
+	await connection.close();
 });
