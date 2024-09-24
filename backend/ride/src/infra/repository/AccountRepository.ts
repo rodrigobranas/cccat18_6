@@ -1,4 +1,4 @@
-import Account from "../../domain/Account";
+import Account from "../../domain/entity/Account";
 import { inject } from "../di/DI";
 import DatabaseConnection from "../database/DatabaseConnection";
 

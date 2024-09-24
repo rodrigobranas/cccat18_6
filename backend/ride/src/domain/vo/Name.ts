@@ -1,9 +1,8 @@
-// Entity
-export default class Email {
+export default class Name {
 	private value: string;
 
 	constructor (value: string) {
-		if (!value.match(/^(.+)@(.+)$/)) throw new Error("Invalid email");
+		if (!value.match(/[a-zA-Z] [a-zA-Z]+/)) throw new Error("Invalid name");
 		this.value = value;
 	}
 

@@ -1,6 +1,6 @@
 import AccountRepository from "../../infra/repository/AccountRepository";
 import MailerGateway from "../../infra/gateway/MailerGateway";
-import Account from "../../domain/Account";
+import Account from "../../domain/entity/Account";
 import { inject, Registry } from "../../infra/di/DI";
 
 // Use Case
