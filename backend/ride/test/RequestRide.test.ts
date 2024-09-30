@@ -7,6 +7,7 @@ import { MailerGatewayMemory } from "../src/infra/gateway/MailerGateway";
 import { RideRepositoryDatabase } from "../src/infra/repository/RideRepository";
 import Signup from "../src/application/usecase/Signup";
 import RequestRide from "../src/application/usecase/RequestRide";
+import { PositionRepositoryDatabase } from "../src/infra/repository/PositionRepository";
 
 let signup: Signup;
 let getAccount: GetAccount;
@@ -17,6 +18,7 @@ beforeEach(() => {
 	Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
 	Registry.getInstance().provide("accountRepository", new AccountRepositoryDatabase());
 	Registry.getInstance().provide("rideRepository", new RideRepositoryDatabase());
+	Registry.getInstance().provide("positionRepository", new PositionRepositoryDatabase());
 	Registry.getInstance().provide("mailerGateway", new MailerGatewayMemory());
 	signup = new Signup();
 	getAccount = new GetAccount();
