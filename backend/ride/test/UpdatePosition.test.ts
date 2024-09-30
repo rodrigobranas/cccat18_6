@@ -97,7 +97,6 @@ test("Deve atualiar a posição de uma corrida", async function () {
 	await updatePosition.execute(inputUpdatePosition4);
 	const outputGetRide = await getRide.execute(outputRequestRide.rideId);
 	expect(outputGetRide.distance).toBe(30);
-	console.log(outputGetRide.positions);
 });
 
 afterEach(async () => {
