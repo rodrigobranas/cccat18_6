@@ -3,7 +3,7 @@ import { inject } from "../../infra/di/DI";
 import PositionRepository from "../../infra/repository/PositionRepository";
 import RideRepository from "../../infra/repository/RideRepository";
 
-export default class UpdatePosition2 {
+export default class UpdatePosition {
 	@inject("rideRepository")
 	rideRepository?: RideRepository;
 	@inject("positionRepository")
@@ -12,7 +12,7 @@ export default class UpdatePosition2 {
 	async execute (input: Input): Promise<void> {
 		const ride = await this.rideRepository?.getRideById(input.rideId);
 		if (!ride) throw new Error();
-		const position = Position.create(input.rideId, input.lat, input.long);
+		const position = Position.create(input.rideId, input.lat, input.long, input.date);
 		await this.positionRepository?.savePosition(position);
 	}
 }
@@ -20,5 +20,6 @@ export default class UpdatePosition2 {
 type Input = {
 	rideId: string,
 	lat: number,
-	long: number
+	long: number,
+	date: Date
 }

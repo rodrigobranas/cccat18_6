@@ -10,7 +10,8 @@ create table ccca.account (
 	car_plate text null,
 	is_passenger boolean not null default false,
 	is_driver boolean not null default false,
-	password text not null
+	password text not null,
+	password_type text not null
 );
 
 create table ccca.ride (

@@ -12,7 +12,7 @@ export default class Signup {
 
 	async execute (input: any) {
 		// orquestrar entitidades
-		const account = Account.create(input.name, input.email, input.cpf, input.carPlate, input.password, input.isPassenger, input.isDriver);
+		const account = Account.create(input.name, input.email, input.cpf, input.carPlate, input.password, input.isPassenger, input.isDriver, input.passwordType || "textplain");
 		// orquestrando recursos
 		const accountData = await this.accountRepository?.getAccountByEmail(input.email);
 		if (accountData) throw new Error("Duplicated account");

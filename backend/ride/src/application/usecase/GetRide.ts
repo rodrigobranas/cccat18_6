@@ -5,6 +5,7 @@ import { inject, Registry } from "../../infra/di/DI";
 import Ride from "../../domain/entity/Ride";
 import RideRepository from "../../infra/repository/RideRepository";
 import PositionRepository from "../../infra/repository/PositionRepository";
+import DistanceCalculator from "../../domain/service/DistanceCalculator";
 
 export default class GetRide {
 	@inject("rideRepository")
@@ -16,7 +17,7 @@ export default class GetRide {
 		const ride = await this.rideRepository?.getRideById(rideId);
 		if (!ride) throw new Error("Ride not found");
 		const positions = await this.positionRepository?.getPositionsByRideId(rideId);
-		const distance = ride.getDistance(positions || []);
+		const distance = (ride.getStatus() === "completed") ? ride.getDistance() : DistanceCalculator.calculateByPositions(positions || []);
 		return {
 			rideId: ride.getRideId(),
 			passengerId: ride.getPassengerId(),
@@ -27,7 +28,8 @@ export default class GetRide {
 			status: ride.getStatus(),
 			driverId: ride.getDriverId(),
 			positions: positions || [],
-			distance
+			distance,
+			fare: ride.getFare()
 		}		
 	}
 }
@@ -42,5 +44,6 @@ type Output = {
 	status: string,
 	driverId?: string,
 	positions: any[],
-	distance: number
+	distance: number,
+	fare: number
 }

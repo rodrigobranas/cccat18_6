@@ -1,3 +1,4 @@
+import Position from "../entity/Position";
 import Coord from "../vo/Coord";
 
 export default class DistanceCalculator {
@@ -15,5 +16,15 @@ export default class DistanceCalculator {
 		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 		const distance = earthRadius * c;
 		return Math.round(distance);
+	}
+
+	static calculateByPositions (positions: Position[]) {
+		let distance = 0;
+		for (const [index, position] of positions.entries()) {
+			const nextPosition = positions[index + 1];
+			if (!nextPosition) continue;
+			distance += DistanceCalculator.calculate(position.coord, nextPosition.coord);
+		}
+		return distance;
 	}
 }
