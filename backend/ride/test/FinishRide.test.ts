@@ -1,47 +1,35 @@
-import { AccountRepositoryDatabase, AccountRepositoryMemory } from "../src/infra/repository/AccountRepository";
 import { PgPromiseAdapter } from "../src/infra/database/DatabaseConnection";
 import { Registry } from "../src/infra/di/DI";
-import GetAccount from "../src/application/usecase/GetAccount";
 import GetRide from "../src/application/usecase/GetRide";
-import { MailerGatewayMemory } from "../src/infra/gateway/MailerGateway";
 import { RideRepositoryDatabase } from "../src/infra/repository/RideRepository";
-import Signup from "../src/application/usecase/Signup";
 import RequestRide from "../src/application/usecase/RequestRide";
 import AcceptRide from "../src/application/usecase/AcceptRide";
 import StartRide from "../src/application/usecase/StartRide";
 import UpdatePosition from "../src/application/usecase/UpdatePosition";
 import { PositionRepositoryDatabase } from "../src/infra/repository/PositionRepository";
 import FinishRide from "../src/application/usecase/FinishRide";
-import Mediator from "../src/infra/mediator/Mediator";
-import ProcessPayment from "../src/application/usecase/ProcessPayment";
-import GenerateInvoice from "../src/application/usecase/GenerateInvoice";
+import PaymentGateway from "../src/infra/gateway/PaymentGateway";
+import AccountGateway from "../src/infra/gateway/AccountGateway";
+import { RabbitMQAdapter } from "../src/infra/queue/Queue";
 
-let signup: Signup;
-let getAccount: GetAccount;
 let requestRide: RequestRide;
 let getRide: GetRide;
 let acceptRide: AcceptRide;
 let startRide: StartRide;
 let updatePosition: UpdatePosition;
 let finishRide: FinishRide;
+let accountGateway: AccountGateway;
 
-beforeEach(() => {
-	const processPayment = new ProcessPayment();
-	const generateInvoice = new GenerateInvoice();
-	// Mediator
-	const mediator = new Mediator();
-	mediator.register("rideCompleted", async function (event: any) {
-		await processPayment.execute(event);
-		await generateInvoice.execute(event);
-	});
+beforeEach(async () => {
+	const queue = new RabbitMQAdapter();
+	await queue.connect();
+	accountGateway = new AccountGateway();
+	Registry.getInstance().provide("accountGateway", accountGateway);
+	Registry.getInstance().provide("queue", queue);
 	Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
-	Registry.getInstance().provide("mediator", mediator);
-	Registry.getInstance().provide("accountRepository", new AccountRepositoryDatabase());
+	Registry.getInstance().provide("paymentGateway", new PaymentGateway());
 	Registry.getInstance().provide("rideRepository", new RideRepositoryDatabase());
 	Registry.getInstance().provide("positionRepository", new PositionRepositoryDatabase());
-	Registry.getInstance().provide("mailerGateway", new MailerGatewayMemory());
-	signup = new Signup();
-	getAccount = new GetAccount();
 	requestRide = new RequestRide();
 	getRide = new GetRide();
 	acceptRide = new AcceptRide();
@@ -58,7 +46,7 @@ test("Deve finalizar a corrida em horário comercial", async function () {
 		password: "123456",
 		isPassenger: true
 	};
-	const outputSignupPassenger = await signup.execute(inputSignupPassenger);
+	const outputSignupPassenger = await accountGateway.signup(inputSignupPassenger);
 	const inputSignupDriver = {
 		name: "John Doe",
 		email: `john.doe${Math.random()}@gmail.com`,
@@ -67,7 +55,7 @@ test("Deve finalizar a corrida em horário comercial", async function () {
 		carPlate: "AAA9999",
 		isDriver: true
 	};
-	const outputSignupDriver = await signup.execute(inputSignupDriver);
+	const outputSignupDriver = await accountGateway.signup(inputSignupDriver);
 	const inputRequestRide = {
 		passengerId: outputSignupPassenger.accountId,
 		fromLat: -27.584905257808835,
@@ -131,7 +119,7 @@ test("Deve finalizar a corrida em horário noturno", async function () {
 		password: "123456",
 		isPassenger: true
 	};
-	const outputSignupPassenger = await signup.execute(inputSignupPassenger);
+	const outputSignupPassenger = await accountGateway.signup(inputSignupPassenger);
 	const inputSignupDriver = {
 		name: "John Doe",
 		email: `john.doe${Math.random()}@gmail.com`,
@@ -140,7 +128,7 @@ test("Deve finalizar a corrida em horário noturno", async function () {
 		carPlate: "AAA9999",
 		isDriver: true
 	};
-	const outputSignupDriver = await signup.execute(inputSignupDriver);
+	const outputSignupDriver = await accountGateway.signup(inputSignupDriver);
 	const inputRequestRide = {
 		passengerId: outputSignupPassenger.accountId,
 		fromLat: -27.584905257808835,
@@ -204,7 +192,7 @@ test("Deve finalizar a corrida no primeiro dia do mês", async function () {
 		password: "123456",
 		isPassenger: true
 	};
-	const outputSignupPassenger = await signup.execute(inputSignupPassenger);
+	const outputSignupPassenger = await accountGateway.signup(inputSignupPassenger);
 	const inputSignupDriver = {
 		name: "John Doe",
 		email: `john.doe${Math.random()}@gmail.com`,
@@ -213,7 +201,7 @@ test("Deve finalizar a corrida no primeiro dia do mês", async function () {
 		carPlate: "AAA9999",
 		isDriver: true
 	};
-	const outputSignupDriver = await signup.execute(inputSignupDriver);
+	const outputSignupDriver = await accountGateway.signup(inputSignupDriver);
 	const inputRequestRide = {
 		passengerId: outputSignupPassenger.accountId,
 		fromLat: -27.584905257808835,

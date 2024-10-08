@@ -1,31 +1,25 @@
-import { AccountRepositoryDatabase, AccountRepositoryMemory } from "../src/infra/repository/AccountRepository";
 import { PgPromiseAdapter } from "../src/infra/database/DatabaseConnection";
 import { Registry } from "../src/infra/di/DI";
-import GetAccount from "../src/application/usecase/GetAccount";
 import GetRide from "../src/application/usecase/GetRide";
-import { MailerGatewayMemory } from "../src/infra/gateway/MailerGateway";
 import { RideRepositoryDatabase } from "../src/infra/repository/RideRepository";
-import Signup from "../src/application/usecase/Signup";
 import RequestRide from "../src/application/usecase/RequestRide";
 import AcceptRide from "../src/application/usecase/AcceptRide";
 import StartRide from "../src/application/usecase/StartRide";
 import { PositionRepositoryDatabase } from "../src/infra/repository/PositionRepository";
+import AccountGateway from "../src/infra/gateway/AccountGateway";
 
-let signup: Signup;
-let getAccount: GetAccount;
 let requestRide: RequestRide;
 let getRide: GetRide;
 let acceptRide: AcceptRide;
 let startRide: StartRide;
+let accountGateway: AccountGateway;
 
 beforeEach(() => {
+	accountGateway = new AccountGateway();
+	Registry.getInstance().provide("accountGateway", accountGateway);
 	Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
-	Registry.getInstance().provide("accountRepository", new AccountRepositoryDatabase());
 	Registry.getInstance().provide("rideRepository", new RideRepositoryDatabase());
 	Registry.getInstance().provide("positionRepository", new PositionRepositoryDatabase());
-	Registry.getInstance().provide("mailerGateway", new MailerGatewayMemory());
-	signup = new Signup();
-	getAccount = new GetAccount();
 	requestRide = new RequestRide();
 	getRide = new GetRide();
 	acceptRide = new AcceptRide();
@@ -40,7 +34,7 @@ test("Deve iniciar uma corrida", async function () {
 		password: "123456",
 		isPassenger: true
 	};
-	const outputSignupPassenger = await signup.execute(inputSignupPassenger);
+	const outputSignupPassenger = await accountGateway.signup(inputSignupPassenger);
 	const inputSignupDriver = {
 		name: "John Doe",
 		email: `john.doe${Math.random()}@gmail.com`,
@@ -49,7 +43,7 @@ test("Deve iniciar uma corrida", async function () {
 		carPlate: "AAA9999",
 		isDriver: true
 	};
-	const outputSignupDriver = await signup.execute(inputSignupDriver);
+	const outputSignupDriver = await accountGateway.signup(inputSignupDriver);
 	const inputRequestRide = {
 		passengerId: outputSignupPassenger.accountId,
 		fromLat: -27.584905257808835,

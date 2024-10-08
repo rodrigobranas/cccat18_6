@@ -6,19 +6,8 @@ import { Registry } from "./infra/di/DI";
 import { PgPromiseAdapter } from "./infra/database/DatabaseConnection";
 import { ExpressAdapter } from "./infra/http/HttpServer";
 import AccountController from "./infra/controller/AccountController";
-import Mediator from "./infra/mediator/Mediator";
-import ProcessPayment from "./application/usecase/ProcessPayment";
-import GenerateInvoice from "./application/usecase/GenerateInvoice";
 
 const httpServer = new ExpressAdapter();
-const processPayment = new ProcessPayment();
-const generateInvoice = new GenerateInvoice();
-const mediator = new Mediator();
-mediator.register("rideCompleted", async function (event: any) {
-	await processPayment.execute(event);
-	await generateInvoice.execute(event);
-});
-Registry.getInstance().provide("mediator", mediator);
 Registry.getInstance().provide("httpServer", httpServer);
 Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
 Registry.getInstance().provide("accountRepository", new AccountRepositoryDatabase());
