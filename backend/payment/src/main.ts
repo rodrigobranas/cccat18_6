@@ -13,13 +13,14 @@ import ORM from "./infra/orm/ORM";
 
 async function main () {
 	const httpServer = new ExpressAdapter();
+	const databaseConnection = new PgPromiseAdapter();
 	const queue = new RabbitMQAdapter();
 	await queue.connect();
 	Registry.getInstance().provide("httpServer", httpServer);
 	Registry.getInstance().provide("queue", queue);
-	Registry.getInstance().provide("databaseConnection", new PgPromiseAdapter());
+	Registry.getInstance().provide("databaseConnection", databaseConnection);
 	Registry.getInstance().provide("paymentProcessor", PaymentProcessorFactory.create());
-	Registry.getInstance().provide("orm", new ORM(new PgPromiseAdapter()));
+	Registry.getInstance().provide("orm", new ORM());
 	Registry.getInstance().provide("transactionRepository", new TransactionRepositoryORM());
 	Registry.getInstance().provide("processPayment", new ProcessPayment());
 	Registry.getInstance().provide("accountController", new AccountController());

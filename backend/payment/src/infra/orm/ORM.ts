@@ -1,10 +1,10 @@
 import Transaction from "../../domain/Transaction";
 import DatabaseConnection from "../database/DatabaseConnection";
+import { inject } from "../di/DI";
 
 export default class ORM {
-
-	constructor (readonly connection: DatabaseConnection) {
-	}
+	@inject("databaseConnection")
+	connection!: DatabaseConnection;
 
 	async save (model: Model) {
 		const columns = model.columns.map((column) => column.column).join(",");
