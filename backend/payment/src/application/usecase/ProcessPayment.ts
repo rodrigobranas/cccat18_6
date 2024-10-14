@@ -22,14 +22,12 @@ export default class ProcessPayment {
 		const transaction = Transaction.create(input.rideId, input.amount);
 		try {
 			const outputCreateTransaction = await this.paymentProcessor.processPayment(inputTransaction);
-			console.log(outputCreateTransaction);
 			if (outputCreateTransaction.status === "approved") {
 				transaction.pay();
 				await this.transactionRepository.saveTransaction(transaction);
-				console.log("pago com sucesso");
 			}
 		} catch (e: any) {
-			console.log(e.message);
+			console.log("error", e.message);
 		}
 	}
 }

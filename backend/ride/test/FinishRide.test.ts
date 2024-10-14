@@ -19,9 +19,18 @@ let startRide: StartRide;
 let updatePosition: UpdatePosition;
 let finishRide: FinishRide;
 let accountGateway: AccountGateway;
+let queue: RabbitMQAdapter;
+
+function sleep (time: number) {
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			resolve(true);
+		}, time);
+	});
+}
 
 beforeEach(async () => {
-	const queue = new RabbitMQAdapter();
+	queue = new RabbitMQAdapter();
 	await queue.connect();
 	accountGateway = new AccountGateway();
 	Registry.getInstance().provide("accountGateway", accountGateway);
@@ -260,4 +269,6 @@ test("Deve finalizar a corrida no primeiro dia do mês", async function () {
 afterEach(async () => {
 	const connection = Registry.getInstance().inject("databaseConnection");
 	await connection.close();
+	await sleep(500);
+	await queue.disconnect();
 });

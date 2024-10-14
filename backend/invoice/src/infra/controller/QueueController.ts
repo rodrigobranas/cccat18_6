@@ -11,7 +11,6 @@ export default class QueueController {
 
 	constructor () {
 		this.queue.consume("rideCompleted.generateInvoice", async (input: any) => {
-			console.log(input);
 			await this.generateInvoice.execute(input);
 		});
 	}

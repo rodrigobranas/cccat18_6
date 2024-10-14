@@ -3,11 +3,13 @@ import amqp from "amqplib";
 
 export default interface Queue {
 	connect (): Promise<void>;
+	disconnect (): Promise<void>;
 	publish (exchange: string, data: any): Promise<void>;
 	consume (queue: string, callback: Function): Promise<void>;
 }
 
 export class RabbitMQAdapter implements Queue {
+	
 	connection!: Connection;
 
 	async connect(): Promise<void> {
@@ -26,6 +28,10 @@ export class RabbitMQAdapter implements Queue {
 			await callback(input);
 			channel.ack(message);
 		});
+	}
+
+	async disconnect(): Promise<void> {
+		return this.connection.close();
 	}
 
 }
